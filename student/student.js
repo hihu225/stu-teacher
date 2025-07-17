@@ -1,9 +1,10 @@
 // Import the services from your central config file
-import { auth, db } from '../firebase.js'; 
+// The path '../firebase.js' goes up one directory to find the file
+import { auth, db } from '../firebase.js';
 
 // Import the specific functions you need for this file
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { collection, doc, getDoc,  } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { collection, doc, getDoc, addDoc, query, where, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const studentWelcomeEl = document.getElementById('student-welcome');
 const logoutBtn = document.getElementById('logout-btn');
@@ -42,9 +43,11 @@ onAuthStateChanged(auth, async (user) => {
             loadTeachers();
             loadMyAppointments();
         } else {
+            // If not a student or data is missing, redirect
             window.location.href = '../index.html';
         }
     } else {
+        // Not logged in, redirect
         window.location.href = '../index.html';
     }
 });
@@ -76,7 +79,7 @@ const renderTeachers = (teachers) => {
     </tr></thead><tbody></tbody></table>`;
     const tbody = teacherListDiv.querySelector('tbody');
     if (teachers.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4">No teachers found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4">No teachers found matching your criteria.</td></tr>`;
         return;
     }
     tbody.innerHTML = '';
@@ -87,7 +90,7 @@ const renderTeachers = (teachers) => {
                 <td class="py-2 px-4 border-b">${teacher.department}</td>
                 <td class="py-2 px-4 border-b">${teacher.subject}</td>
                 <td class="py-2 px-4 border-b text-center">
-                    <button onclick="openBookingModal('${teacher.id}', '${teacher.name}')" class="book-btn bg-blue-500 text-white px-3 py-1 rounded text-sm">Book</button>
+                    <button onclick="openBookingModal('${teacher.id}', '${teacher.name}')" class="book-btn bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">Book</button>
                 </td>
             </tr>
         `;
@@ -142,7 +145,6 @@ bookingForm.addEventListener('submit', async (e) => {
         return;
     }
     
-    // Basic validation for date
     if (new Date(dateTime) < new Date()) {
         alert("You cannot book an appointment in the past.");
         return;
@@ -154,7 +156,7 @@ bookingForm.addEventListener('submit', async (e) => {
             teacherId: teacherId,
             dateTime: dateTime,
             message: message,
-            status: 'pending' // Initial status
+            status: 'pending'
         });
         alert('Appointment requested successfully!');
         bookingModal.style.display = 'none';
@@ -176,16 +178,16 @@ const loadMyAppointments = () => {
             return;
         }
 
-        let appointments = [];
-        // Fetch all teacher names
-        for (const docSnap of querySnapshot.docs) {
+        const usersSnapshot = await getDocs(collection(db, "users"));
+        const usersMap = new Map();
+        usersSnapshot.forEach(doc => usersMap.set(doc.id, doc.data()));
+
+        let appointments = querySnapshot.docs.map(docSnap => {
             const appointment = { id: docSnap.id, ...docSnap.data() };
-            const teacherDoc = await getDoc(doc(db, "users", appointment.teacherId));
-            appointment.teacherName = teacherDoc.exists() ? teacherDoc.data().name : "Unknown Teacher";
-            appointments.push(appointment);
-        }
+            const teacherName = usersMap.get(appointment.teacherId)?.name || "Unknown Teacher";
+            return { ...appointment, teacherName };
+        });
         
-        // Sort by date
         appointments.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
 
         myAppointmentsDiv.innerHTML = ''; // Clear previous list

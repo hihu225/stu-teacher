@@ -37,9 +37,9 @@
 
             <!-- Registration Form -->
             <div id="register-form" class="bg-white p-8 rounded-lg shadow-lg hidden">
-                <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Student Registration</h2>
-                 <div id="register-message" class="text-center mb-4 hidden"></div>
-                <form onsubmit="registerStudent(event)">
+                <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Register an Account</h2>
+                <div id="register-message" class="text-center mb-4 hidden"></div>
+                <form onsubmit="registerUser(event)">
                     <div class="mb-4">
                         <label for="register-name" class="block text-gray-700 text-sm font-bold mb-2">Full Name</label>
                         <input type="text" id="register-name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
@@ -51,6 +51,24 @@
                     <div class="mb-4">
                         <label for="register-password" class="block text-gray-700 text-sm font-bold mb-2">Password</label>
                         <input type="password" id="register-password" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="register-role" class="block text-gray-700 text-sm font-bold mb-2">I am a...</label>
+                        <select id="register-role" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            <option value="student">Student</option>
+                            <option value="teacher">Teacher</option>
+                        </select>
+                    </div>
+                    <!-- Teacher-specific fields -->
+                    <div id="teacher-fields" class="hidden">
+                        <div class="mb-4">
+                            <label for="register-department" class="block text-gray-700 text-sm font-bold mb-2">Department</label>
+                            <input type="text" id="register-department" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        </div>
+                        <div class="mb-4">
+                            <label for="register-subject" class="block text-gray-700 text-sm font-bold mb-2">Subject</label>
+                            <input type="text" id="register-subject" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        </div>
                     </div>
                     <div class="flex items-center justify-between">
                         <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full">
@@ -66,11 +84,7 @@
     </div>
 
     <script type="module">
-        // Import the initialized auth and db services from your central firebase.js file
-        // The path is './firebase.js' because it's in the same directory as index.html
         import { auth, db } from './firebase.js';
-
-        // Import the specific functions you need from the Firebase SDKs
         import { 
             signInWithEmailAndPassword, 
             createUserWithEmailAndPassword, 
@@ -88,6 +102,10 @@
         const registerForm = document.getElementById('register-form');
         const showRegisterLink = document.getElementById('show-register');
         const showLoginLink = document.getElementById('show-login');
+        const roleSelect = document.getElementById('register-role');
+        const teacherFields = document.getElementById('teacher-fields');
+        const departmentInput = document.getElementById('register-department');
+        const subjectInput = document.getElementById('register-subject');
 
         showRegisterLink.addEventListener('click', (e) => {
             e.preventDefault();
@@ -101,10 +119,23 @@
             loginForm.classList.remove('hidden');
         });
 
+        // --- Dynamic Registration Form Logic ---
+        roleSelect.addEventListener('change', (e) => {
+            if (e.target.value === 'teacher') {
+                teacherFields.classList.remove('hidden');
+                departmentInput.required = true;
+                subjectInput.required = true;
+            } else {
+                teacherFields.classList.add('hidden');
+                departmentInput.required = false;
+                subjectInput.required = false;
+            }
+        });
 
         // --- Authentication Logic ---
         window.loginUser = async function(event) {
             event.preventDefault();
+            // ... (Login logic remains the same)
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
             const errorDiv = document.getElementById('login-error');
@@ -113,7 +144,6 @@
             try {
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
-
                 const userDocRef = doc(db, "users", user.uid);
                 const userDoc = await getDoc(userDocRef);
 
@@ -125,17 +155,10 @@
                         await signOut(auth);
                         return;
                     }
-                    // Redirect based on role
                     switch(userData.role) {
-                        case 'admin':
-                            window.location.href = './admin/admin.html';
-                            break;
-                        case 'teacher':
-                            window.location.href = './teacher/teacher.html';
-                            break;
-                        case 'student':
-                            window.location.href = './student/student.html';
-                            break;
+                        case 'admin': window.location.href = './admin/admin.html'; break;
+                        case 'teacher': window.location.href = './teacher/teacher.html'; break;
+                        case 'student': window.location.href = './student/student.html'; break;
                         default:
                             errorDiv.textContent = 'Unknown user role.';
                             errorDiv.classList.remove('hidden');
@@ -149,13 +172,14 @@
                 errorDiv.textContent = error.message;
                 errorDiv.classList.remove('hidden');
             }
-        }
+        };
 
-        window.registerStudent = async function(event) {
+        window.registerUser = async function(event) {
             event.preventDefault();
             const name = document.getElementById('register-name').value;
             const email = document.getElementById('register-email').value;
             const password = document.getElementById('register-password').value;
+            const role = document.getElementById('register-role').value;
             const messageDiv = document.getElementById('register-message');
             messageDiv.classList.add('hidden');
 
@@ -163,23 +187,29 @@
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
 
-                // Add user to Firestore
-                await setDoc(doc(db, "users", user.uid), {
+                // Prepare user data for Firestore
+                const userData = {
                     name: name,
                     email: email,
-                    role: 'student',
-                    status: 'pending' // Students need approval
-                });
+                    role: role,
+                    status: 'pending' // All new registrations require approval
+                };
+
+                if (role === 'teacher') {
+                    userData.department = document.getElementById('register-department').value;
+                    userData.subject = document.getElementById('register-subject').value;
+                }
+
+                // Add user to Firestore
+                await setDoc(doc(db, "users", user.uid), userData);
 
                 messageDiv.textContent = 'Registration successful! Please wait for admin approval.';
                 messageDiv.className = 'text-green-500 text-center mb-4';
                 messageDiv.classList.remove('hidden');
                 
-                // Sign out the user until they are approved
-                await signOut(auth);
-                
-                // Reset form
-                event.target.reset();
+                await signOut(auth); // Sign out until approved
+                event.target.reset(); // Reset form
+                teacherFields.classList.add('hidden'); // Hide teacher fields again
 
             } catch (error) {
                 console.error("Registration Error:", error);
@@ -187,10 +217,10 @@
                 messageDiv.className = 'text-red-500 text-center mb-4';
                 messageDiv.classList.remove('hidden');
             }
-        }
+        };
 
         // Check if a user is already logged in and redirect them
-         onAuthStateChanged(auth, async (user) => {
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const userDocRef = doc(db, "users", user.uid);
                 const userDoc = await getDoc(userDocRef);
@@ -198,15 +228,9 @@
                     const userData = userDoc.data();
                      if (userData.status === 'approved') {
                          switch(userData.role) {
-                            case 'admin':
-                                window.location.href = './admin/admin.html';
-                                break;
-                            case 'teacher':
-                                window.location.href = './teacher/teacher.html';
-                                break;
-                            case 'student':
-                                window.location.href = './student/student.html';
-                                break;
+                            case 'admin': window.location.href = './admin/admin.html'; break;
+                            case 'teacher': window.location.href = './teacher/teacher.html'; break;
+                            case 'student': window.location.href = './student/student.html'; break;
                         }
                      }
                 }
