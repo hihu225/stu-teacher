@@ -2,7 +2,8 @@ import { auth, db } from '../firebase.js';
 
 // Import the specific functions you need for this file
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { collection, doc, getDoc,  } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+// CORRECTED: Added missing firestore functions: query, where, onSnapshot, updateDoc
+import { collection, doc, getDoc, updateDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const teacherWelcomeEl = document.getElementById('teacher-welcome');
 const pendingAppointmentsDiv = document.getElementById('pending-appointments-list');
@@ -100,12 +101,12 @@ const renderAppointments = (element, appointments, type) => {
         let actionButtons = '';
         if (type === 'pending') {
             actionButtons = `
-                <button onclick="updateAppointmentStatus('${app.id}', 'approved')" class="approve-btn bg-green-500 text-white px-2 py-1 rounded text-sm mr-2">Approve</button>
-                <button onclick="updateAppointmentStatus('${app.id}', 'cancelled')" class="cancel-btn bg-red-500 text-white px-2 py-1 rounded text-sm">Decline</button>
+                <button onclick="updateAppointmentStatus('${app.id}', 'approved')" class="approve-btn bg-green-500 text-white px-2 py-1 rounded text-sm mr-2 hover:bg-green-600">Approve</button>
+                <button onclick="updateAppointmentStatus('${app.id}', 'cancelled')" class="cancel-btn bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600">Decline</button>
             `;
         } else if (type === 'approved') {
             actionButtons = `
-                <button onclick="updateAppointmentStatus('${app.id}', 'cancelled')" class="cancel-btn bg-red-500 text-white px-2 py-1 rounded text-sm">Cancel</button>
+                <button onclick="updateAppointmentStatus('${app.id}', 'cancelled')" class="cancel-btn bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600">Cancel</button>
             `;
         }
         
