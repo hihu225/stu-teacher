@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body class="bg-gray-100 font-sans">
+    <nav class="bg-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-gray-800">Teacher Dashboard</h1>
+                </div>
+                <div class="flex items-center">
+                    <p id="teacher-welcome" class="text-gray-600 text-sm mr-4 hidden md:block"></p>
+                    <button id="logout-btn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-6">
+        <!-- Pending Appointments -->
+        <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">Pending Appointment Requests</h2>
+            <div id="pending-appointments-list" class="overflow-x-auto">
+                <!-- Pending appointments will be populated by JS -->
+            </div>
+        </div>
+
+        <!-- Approved/Upcoming Appointments -->
+        <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">Your Approved Appointments</h2>
+            <div id="approved-appointments-list" class="overflow-x-auto">
+                <!-- Approved appointments will be populated by JS -->
+            </div>
+        </div>
+
+        <!-- Cancelled/Past Appointments -->
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">Appointment History</h2>
+            <div id="history-appointments-list" class="overflow-x-auto">
+                <!-- History appointments will be populated by JS -->
+            </div>
+        </div>
+    </main>
+
+    <script type="module" src="teacher.js"></script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body class="bg-gray-100 font-sans">
+    <nav class="bg-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-gray-800">Admin Dashboard</h1>
+                </div>
+                <div>
+                     <p id="admin-name" class="text-gray-600 text-sm mr-4"></p>
+                </div>
+                <div>
+                    <button id="logout-btn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-6">
+        <!-- Teacher Management -->
+        <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">Manage Teachers</h2>
+            <form id="add-teacher-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <input type="hidden" id="teacher-id">
+                <div>
+                    <label for="teacher-name" class="block text-sm font-medium text-gray-700">Name</label>
+                    <input type="text" id="teacher-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                </div>
+                <div>
+                    <label for="teacher-department" class="block text-sm font-medium text-gray-700">Department</label>
+                    <input type="text" id="teacher-department" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                </div>
+                <div>
+                    <label for="teacher-subject" class="block text-sm font-medium text-gray-700">Subject</label>
+                    <input type="text" id="teacher-subject" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                </div>
+                <div class="flex space-x-2">
+                    <button type="submit" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Add Teacher</button>
+                    <button type="button" id="cancel-edit-btn" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded hidden">Cancel</button>
+                </div>
+            </form>
+            <div id="teacher-list" class="mt-6">
+                <!-- Teacher list will be populated by JS -->
+            </div>
+        </div>
+
+        <!-- Student Registration Approvals -->
+        <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">Pending Student Registrations</h2>
+            <div id="pending-students-list" class="overflow-x-auto">
+                <!-- Pending students list will be populated by JS -->
+            </div>
+        </div>
+
+        <!-- All Appointments -->
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">All Appointments</h2>
+            <div id="all-appointments-list" class="overflow-x-auto">
+                <!-- All appointments list will be populated by JS -->
+            </div>
+        </div>
+    </main>
+
+    <script type="module" src="admin.js"></script>
+</body>
+</html>

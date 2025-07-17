@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body class="bg-gray-100 font-sans">
+    <nav class="bg-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-gray-800">Student Dashboard</h1>
+                </div>
+                <div class="flex items-center">
+                     <p id="student-welcome" class="text-gray-600 text-sm mr-4 hidden md:block"></p>
+                    <button id="logout-btn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Column: Teacher Search & List -->
+        <div class="lg:col-span-2">
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">Book an Appointment</h2>
+                <p class="text-gray-600 mb-4">Find a teacher and book a time that works for you.</p>
+                
+                <!-- Search Filters -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <input type="text" id="search-name" placeholder="Search by name..." class="p-2 border rounded-md">
+                    <input type="text" id="search-department" placeholder="Search by department..." class="p-2 border rounded-md">
+                    <input type="text" id="search-subject" placeholder="Search by subject..." class="p-2 border rounded-md">
+                </div>
+
+                <!-- Teacher List -->
+                <div id="teacher-list" class="overflow-x-auto">
+                    <!-- Teacher list will be populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: My Appointments -->
+        <div>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">My Appointments</h2>
+                <div id="my-appointments-list">
+                    <!-- Student's appointments will be populated by JS -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Booking Modal -->
+    <div id="booking-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="close-modal-btn">&times;</span>
+            <h3 class="text-xl font-bold mb-4">Book Appointment with <span id="modal-teacher-name"></span></h3>
+            <form id="booking-form">
+                <input type="hidden" id="modal-teacher-id">
+                <div class="mb-4">
+                    <label for="appointment-datetime" class="block text-sm font-medium text-gray-700">Preferred Date & Time</label>
+                    <input type="datetime-local" id="appointment-datetime" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                </div>
+                <div class="mb-4">
+                    <label for="appointment-message" class="block text-sm font-medium text-gray-700">Message (Optional)</label>
+                    <textarea id="appointment-message" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Request Appointment</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="student.js"></script>
+</body>
+</html>
