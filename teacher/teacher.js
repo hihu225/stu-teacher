@@ -1,8 +1,5 @@
 import { auth, db } from '../firebase.js'; 
-
-// Import the specific functions you need for this file
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-// CORRECTED: Added missing firestore functions: query, where, onSnapshot, updateDoc
 import { collection, doc, getDoc, updateDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const teacherWelcomeEl = document.getElementById('teacher-welcome');
@@ -21,23 +18,15 @@ onAuthStateChanged(auth, async (user) => {
         if (userDoc.exists() && userDoc.data().role === 'teacher') {
             currentTeacherId = user.uid;
             const teacherData = userDoc.data();
-            teacherWelcomeEl.textContent = `Welcome, ${teacherData.name} (${teacherData.department})`;
+            teacherWelcomeEl.textContent = `Welcome, ${teacherData.name}`;
             teacherWelcomeEl.classList.remove('hidden');
             loadAppointments();
         } else {
-            // Not a teacher, redirect
             window.location.href = '../index.html';
         }
     } else {
-        // Not logged in, redirect
         window.location.href = '../index.html';
     }
-});
-
-// --- Logout ---
-logoutBtn.addEventListener('click', async () => {
-    await signOut(auth);
-    window.location.href = '../index.html';
 });
 
 // --- Appointment Loading and Management ---
@@ -46,39 +35,34 @@ const loadAppointments = () => {
 
     const q = query(collection(db, "appointments"), where("teacherId", "==", currentTeacherId));
     
-    onSnapshot(q, async (querySnapshot) => {
+    onSnapshot(q, (querySnapshot) => {
         const pendingAppointments = [];
         const approvedAppointments = [];
         const historyAppointments = [];
 
-        // Use Promise.all to fetch all student names in parallel
-        const appointmentPromises = querySnapshot.docs.map(async (docSnap) => {
+        // **MODIFIED:** No longer need to fetch student data separately
+        querySnapshot.forEach(docSnap => {
             const appointment = { id: docSnap.id, ...docSnap.data() };
-            const studentDoc = await getDoc(doc(db, "users", appointment.studentId));
-            appointment.studentName = studentDoc.exists() ? studentDoc.data().name : "Unknown Student";
-            return appointment;
-        });
-
-        const allAppointments = await Promise.all(appointmentPromises);
-        
-        allAppointments.forEach(appointment => {
+            
             if (appointment.status === 'pending') {
                 pendingAppointments.push(appointment);
             } else if (appointment.status === 'approved') {
                 approvedAppointments.push(appointment);
-            } else { // 'cancelled', 'completed', etc.
+            } else { 
                 historyAppointments.push(appointment);
             }
         });
         
-        // Sort appointments by date
         pendingAppointments.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
         approvedAppointments.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
-        historyAppointments.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime)); // Show most recent history first
+        historyAppointments.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
 
         renderAppointments(pendingAppointmentsDiv, pendingAppointments, 'pending');
         renderAppointments(approvedAppointmentsDiv, approvedAppointments, 'approved');
         renderAppointments(historyAppointmentsDiv, historyAppointments, 'history');
+
+    }, (error) => {
+        console.error("Error fetching appointments snapshot:", error);
     });
 };
 
@@ -96,25 +80,21 @@ const renderAppointments = (element, appointments, type) => {
         return;
     }
 
-    tbody.innerHTML = ''; // Clear existing rows
+    tbody.innerHTML = '';
     appointments.forEach(app => {
         let actionButtons = '';
         if (type === 'pending') {
-            actionButtons = `
-                <button onclick="updateAppointmentStatus('${app.id}', 'approved')" class="approve-btn bg-green-500 text-white px-2 py-1 rounded text-sm mr-2 hover:bg-green-600">Approve</button>
-                <button onclick="updateAppointmentStatus('${app.id}', 'cancelled')" class="cancel-btn bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600">Decline</button>
-            `;
+            actionButtons = `<button onclick="updateAppointmentStatus('${app.id}', 'approved')" class="approve-btn bg-green-500 text-white px-2 py-1 rounded text-sm mr-2 hover:bg-green-600">Approve</button><button onclick="updateAppointmentStatus('${app.id}', 'cancelled')" class="cancel-btn bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600">Decline</button>`;
         } else if (type === 'approved') {
-            actionButtons = `
-                <button onclick="updateAppointmentStatus('${app.id}', 'cancelled')" class="cancel-btn bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600">Cancel</button>
-            `;
+            actionButtons = `<button onclick="updateAppointmentStatus('${app.id}', 'cancelled')" class="cancel-btn bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600">Cancel</button>`;
         }
         
         const statusCell = type === 'history' ? `<td class="py-2 px-4 border-b font-semibold ${app.status === 'cancelled' ? 'text-red-600' : 'text-gray-500'}">${app.status}</td>` : `<td class="py-2 px-4 border-b text-center">${actionButtons}</td>`;
 
+        // **MODIFIED:** Using app.studentName directly
         const row = `
             <tr>
-                <td class="py-2 px-4 border-b">${app.studentName}</td>
+                <td class="py-2 px-4 border-b">${app.studentName || 'Unknown Student'}</td>
                 <td class="py-2 px-4 border-b">${new Date(app.dateTime).toLocaleString()}</td>
                 <td class="py-2 px-4 border-b">${app.message}</td>
                 ${statusCell}
@@ -124,19 +104,6 @@ const renderAppointments = (element, appointments, type) => {
     });
 };
 
-window.updateAppointmentStatus = async (appointmentId, newStatus) => {
-    const confirmationText = newStatus === 'approved' 
-        ? 'Are you sure you want to approve this appointment?'
-        : 'Are you sure you want to cancel this appointment?';
-
-    if (confirm(confirmationText)) {
-        try {
-            const appointmentRef = doc(db, "appointments", appointmentId);
-            await updateDoc(appointmentRef, { status: newStatus });
-            alert(`Appointment has been ${newStatus}.`);
-        } catch (error) {
-            console.error("Error updating appointment:", error);
-            alert('Error: ' + error.message);
-        }
-    }
-};
+// --- Other functions (logout, updateAppointmentStatus) remain unchanged ---
+logoutBtn.addEventListener('click', async () => { await signOut(auth); window.location.href = '../index.html'; });
+window.updateAppointmentStatus = async (appointmentId, newStatus) => { const confirmationText = newStatus === 'approved' ? 'Are you sure you want to approve this appointment?' : 'Are you sure you want to cancel this appointment?'; if (confirm(confirmationText)) { try { const appointmentRef = doc(db, "appointments", appointmentId); await updateDoc(appointmentRef, { status: newStatus }); alert(`Appointment has been ${newStatus}.`); } catch (error) { console.error("Error updating appointment:", error); alert('Error: ' + error.message); } } };
